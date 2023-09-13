@@ -20,11 +20,13 @@ services:
         labels:
             # enable traefik
             - "traefik.enable=true"
-            # middleware
+            # middlewares
             - "traefik.http.middlewares.${NAMESPACE_UNDERLINE}_webdav_https.redirectscheme.scheme=https"
             - "traefik.http.middlewares.${NAMESPACE_UNDERLINE}_webdav_frame.headers.customFrameOptionsValue=sameorigin"
+            # chains
+            - "traefik.http.middlewares.${NAMESPACE_UNDERLINE}_webdav_chain.chain.middlewares=${NAMESPACE_UNDERLINE}_webdav_frame"
             # services (load balancer)
-            - "traefik.http.services.${NAMESPACE_UNDERLINE}_webdav_http_lb.loadbalancer.server.port=${PORT_HTTP}"
+            - "traefik.http.services.${NAMESPACE_UNDERLINE}_webdav_http_lb.loadbalancer.server.port=${PORT_HTTP_webdav_INTERNAL}"
             - "traefik.http.services.${NAMESPACE_UNDERLINE}_webdav_http_lb.loadbalancer.server.scheme=http"
             # http layer -> redirect https
             - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_http.entrypoints=web"
@@ -33,12 +35,12 @@ services:
             # https layer
             - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.entrypoints=websecure"
             - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.rule=Host(`www.${URL_PRODUCTION}`)"
-            - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.middlewares=${NAMESPACE_UNDERLINE}_webdav_frame"
+            - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.middlewares=${NAMESPACE_UNDERLINE}_webdav_chain"
             - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.service=${NAMESPACE_UNDERLINE}_webdav_http_lb"
             - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.tls=true"
             - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.tls.certresolver=letsencryptresolver"
             # network
-            - "traefik.docker.network=${NETWORK_NAME_TRAEFIK_PUBLIC_LOCAL}"
+            - "traefik.docker.network=${NETWORK_NAME_TRAEFIK_PUBLIC_PRODUCTION}"
 
 # configure networks
 networks:
