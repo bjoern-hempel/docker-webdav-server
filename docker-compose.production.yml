@@ -1,0 +1,49 @@
+# ===========================================
+# Overwrites the docker-compose.yml file.
+#
+# @author Björn Hempel <bjoern.hempel@ressourcenmangel.de>
+# @version 1.0 (2023-09-13)
+# ===========================================
+version: "3.8"
+
+# Configures the services
+services:
+    webdav:
+        environment:
+            AUTH_TYPE: "Basic"
+            USERNAME: ${WEBDAV_USER}
+            PASSWORD: ${WEBDAV_PASS}
+            SERVER_NAMES: "www.${URL_PRODUCTION}"
+            UID: 1000
+            GID: 1000
+            TZ: Europe/Berlin
+        labels:
+            # enable traefik
+            - "traefik.enable=true"
+            # middleware
+            - "traefik.http.middlewares.${NAMESPACE_UNDERLINE}_webdav_https.redirectscheme.scheme=https"
+            - "traefik.http.middlewares.${NAMESPACE_UNDERLINE}_webdav_frame.headers.customFrameOptionsValue=sameorigin"
+            # services (load balancer)
+            - "traefik.http.services.${NAMESPACE_UNDERLINE}_webdav_http_lb.loadbalancer.server.port=${PORT_HTTP}"
+            - "traefik.http.services.${NAMESPACE_UNDERLINE}_webdav_http_lb.loadbalancer.server.scheme=http"
+            # http layer -> redirect https
+            - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_http.entrypoints=web"
+            - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_http.rule=Host(`www.${URL_PRODUCTION}`)"
+            - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_http.middlewares=${NAMESPACE_UNDERLINE}_webdav_https"
+            # https layer
+            - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.entrypoints=websecure"
+            - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.rule=Host(`www.${URL_PRODUCTION}`)"
+            - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.middlewares=${NAMESPACE_UNDERLINE}_webdav_frame"
+            - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.service=${NAMESPACE_UNDERLINE}_webdav_http_lb"
+            - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.tls=true"
+            # network
+            - "traefik.docker.network=${NETWORK_NAME_TRAEFIK_PUBLIC_LOCAL}"
+
+# configure networks
+networks:
+    network-traefik:
+        external: true
+        name: "${NETWORK_NAME_TRAEFIK_PUBLIC_PRODUCTION}"
+    network-internal:
+        external: false
+        name: "${NAMESPACE_HOSTNAME}.network.internal"

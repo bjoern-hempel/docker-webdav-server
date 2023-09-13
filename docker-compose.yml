@@ -1,0 +1,39 @@
+# ===========================================
+# A recipe to offer a webdav via docker container.
+#
+# @author Björn Hempel <bjoern.hempel@ressourcenmangel.de>
+# @version 1.0 (2023-09-13)
+# ===========================================
+version: "3.8"
+
+# Configures the services
+services:
+    webdav:
+        image: "bytemark/webdav"
+        container_name: "${NAMESPACE}.webdav"
+        hostname: "${NAMESPACE_HOSTNAME}-webdav"
+        restart: unless-stopped
+        environment:
+            AUTH_TYPE: "Basic"
+            USERNAME: ${WEBDAV_USER}
+            PASSWORD: ${WEBDAV_PASS}
+            SERVER_NAMES: "www.${URL_LOCAL}"
+            UID: 1000
+            GID: 1000
+            TZ: Europe/Berlin
+        networks:
+            - network-internal
+            - network-traefik
+        security_opt:
+            - no-new-privileges:true
+        volumes:
+            - ./files:/var/lib/dav
+
+# configure networks
+networks:
+    network-traefik:
+        external: true
+        name: "${NETWORK_NAME_TRAEFIK_PUBLIC_LOCAL}"
+    network-internal:
+        external: false
+        name: "${NAMESPACE_HOSTNAME}.network.internal"
