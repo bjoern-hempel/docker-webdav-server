@@ -36,6 +36,7 @@ services:
             - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.middlewares=${NAMESPACE_UNDERLINE}_webdav_frame"
             - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.service=${NAMESPACE_UNDERLINE}_webdav_http_lb"
             - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.tls=true"
+            - "traefik.http.routers.${NAMESPACE_UNDERLINE}_webdav_https.tls.certresolver=letsencryptresolver"
             # network
             - "traefik.docker.network=${NETWORK_NAME_TRAEFIK_PUBLIC_LOCAL}"
 
